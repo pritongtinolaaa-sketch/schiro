@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
   useEffect(() => { validateToken(); }, [validateToken]);
 
   const login = async (key) => {
-    const res = await axios.post('/api/auth/login', { key });
+    const res = await axios.post('/login', { key });
     localStorage.setItem('schiro_token', res.data.token);
     setToken(res.data.token);
     setUser(res.data.user);
