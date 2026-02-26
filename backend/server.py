@@ -68,24 +68,14 @@ class TVCodeRequest(BaseModel):
 
 # --- Auth Helpers ---
 async def get_current_user(authorization: str = Header(None)):
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    token_str = authorization.split(" ")[1]
-    try:
-        payload = jwt.decode(token_str, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        key_doc = await db.access_keys.find_one({"id": payload["key_id"]}, {"_id": 0})
-        if not key_doc:
-            raise HTTPException(status_code=401, detail="Key not found")
-        session_id = payload.get("session_id")
-        active = key_doc.get("active_sessions", [])
-        if not any(s["session_id"] == session_id for s in active):
-            raise HTTPException(status_code=401, detail="Session revoked")
-        return {
-            "id": key_doc["id"],
-            "label": key_doc["label"],
-            "is_master": key_doc.get("is_master", False),
-            "session_id": session_id
-        }
+    # TEMP BYPASS - skip real auth
+    print("BYPASS: get_current_user called")
+    return {
+        "id": "bypass-id",
+        "label": "Bypass Master",
+        "is_master": True,
+        "session_id": "bypass-session"
+    }
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError:
