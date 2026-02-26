@@ -587,7 +587,7 @@ async def check_netflix_cookie(cookie_text, format_type="auto"):
     return result
 
 # --- Auth Routes ---
-@api_router.post("/auth/login")
+@app.post("/api/auth/login")
 async def login(data: KeyLogin):
     key_doc = await db.access_keys.find_one({"key_value": data.key}, {"_id": 0})
     if not key_doc:
