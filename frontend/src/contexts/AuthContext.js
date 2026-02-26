@@ -1,55 +1,34 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+// TEMP: Hardcode API base (adjust if your backend path changes)
+const API = '/api';  // or '/api' if prefix is different
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('schiro_token'));
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState({
+    id: 'bypass',
+    label: 'Bypass Master',
+    is_master: true
+  });
+  const [token, setToken] = useState('bypass-token');
+  const [loading, setLoading] = useState(false); // Skip loading
 
-  const validateToken = useCallback(async () => {
-    if (!token) { setLoading(false); return; }
-    try {
-      const res = await axios.get(`${API}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUser(res.data);
-    } catch {
-      localStorage.removeItem('schiro_token');
-      setToken(null);
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
-
-  useEffect(() => { validateToken(); }, [validateToken]);
+  // Skip real token validation - we're always "logged in"
+  useEffect(() => {
+    // Force bypass state on mount
+    localStorage.setItem('schiro_token', 'bypass-token');
+    setToken('bypass-token');
+    setUser({ id: 'bypass', label: 'Bypass Master', is_master: true });
+    setLoading(false);
+  }, []);
 
   const login = async (key) => {
-  // TEMP BYPASS - remove later when DB/auth fixed
-  console.log("Bypass login triggered with key:", key);
+    // Completely ignore key - always succeed
+    console.log("Bypass login triggered (key ignored):", key);
 
-  // Generate a fake but signed JWT token (same format as backend)
-  // This uses a dummy JWT_SECRET - in real backend it's from env
-  // For testing, use a constant secret (change to your real JWT_SECRET if you know it)
-  const dummySecret = "dummy-jwt-secret-for-bypass-2026"; // change this to match your JWT_SECRET if known
-
-  const payload = {
-    key_id: "bypass-id",
-    session_id: "bypass-session-" + Date.now(),
-    is_master: true,
-    exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7) // 7 days
-  };
-
-  // Simple JWT encode (you can use jwt-encode lib if installed, but for bypass use this manual)
-  // Note: This is NOT secure - only for local testing bypass
-  const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
-  const body = btoa(JSON.stringify(payload));
-  const signature = btoa("dummy-signature"); // fake sig - backend will reject unless you bypass validation too
-
-  const fakeToken = `${header}.${body}.${signature}`;
+    const fakeToken = 'bypass-token';
 
     localStorage.setItem('schiro_token', fakeToken);
     setToken(fakeToken);
@@ -59,18 +38,13 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    try {
-      if (token) {
-        await axios.post(`${API}/auth/logout`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      }
-    } catch { /* ignore */ }
+    // Optional: clear state but stay bypassed
     localStorage.removeItem('schiro_token');
     setToken(null);
     setUser(null);
   };
 
+  // Return always-authenticated context
   return (
     <AuthContext.Provider value={{ user, token, loading, login, logout }}>
       {children}
