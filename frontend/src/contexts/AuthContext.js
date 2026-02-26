@@ -28,11 +28,34 @@ export function AuthProvider({ children }) {
   useEffect(() => { validateToken(); }, [validateToken]);
 
   const login = async (key) => {
-    // TEMP BYPASS - remove later
-    localStorage.setItem('schiro_token', 'bypass-token');
-    setToken('bypass-token');
+  // TEMP BYPASS - remove later when DB/auth fixed
+  console.log("Bypass login triggered with key:", key);
+
+  // Generate a fake but signed JWT token (same format as backend)
+  // This uses a dummy JWT_SECRET - in real backend it's from env
+  // For testing, use a constant secret (change to your real JWT_SECRET if you know it)
+  const dummySecret = "dummy-jwt-secret-for-bypass-2026"; // change this to match your JWT_SECRET if known
+
+  const payload = {
+    key_id: "bypass-id",
+    session_id: "bypass-session-" + Date.now(),
+    is_master: true,
+    exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7) // 7 days
+  };
+
+  // Simple JWT encode (you can use jwt-encode lib if installed, but for bypass use this manual)
+  // Note: This is NOT secure - only for local testing bypass
+  const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+  const body = btoa(JSON.stringify(payload));
+  const signature = btoa("dummy-signature"); // fake sig - backend will reject unless you bypass validation too
+
+  const fakeToken = `${header}.${body}.${signature}`;
+
+    localStorage.setItem('schiro_token', fakeToken);
+    setToken(fakeToken);
     setUser({ id: 'bypass', label: 'Bypass Master', is_master: true });
-    return { token: 'bypass-token', user: { id: 'bypass', is_master: true } };
+
+    return { token: fakeToken, user: { id: 'bypass', is_master: true } };
   };
 
   const logout = async () => {
